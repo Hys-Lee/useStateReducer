@@ -1,23 +1,22 @@
 // src/index.ts
-import { useCallback, useState } from "react";
-var useStateReducer = (initState, externalUpdater) => {
-  const [state, setState] = useState(initState);
-  const finalUpdater = useCallback(
-    (internalNewState) => {
-      if (externalUpdater)
-        setState(
-          (prevState) => externalUpdater(
-            prevState,
-            typeof internalNewState === "function" ? internalNewState(prevState) : internalNewState
-          )
-        );
-      else {
-        setState(internalNewState);
+import { useState } from "react";
+var useStateReducer = (initValue, value, externalUpdater) => {
+  const [internalState, setInternalState] = useState(initValue);
+  const isControlled = typeof value !== "undefined";
+  const setState = (newState) => {
+    if (externalUpdater) {
+      const reducedState = externalUpdater(internalState, newState);
+      if (!isControlled && reducedState !== void 0) {
+        setInternalState(reducedState);
       }
-    },
-    [externalUpdater]
-  );
-  return [state, finalUpdater];
+    } else {
+      if (!isControlled) {
+        setInternalState(newState);
+      }
+    }
+  };
+  const state = !isControlled ? internalState : value;
+  return [state, setState];
 };
 export {
   useStateReducer

@@ -1,6 +1,6 @@
 {
   "name": "@vaile/use-state-reducer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "React useState hook with state reducer pattern support",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

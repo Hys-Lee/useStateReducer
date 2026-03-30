@@ -2,7 +2,7 @@ import { SetStateAction, useCallback, useRef, useState } from "react";
 
 const useStateReducer = <T>(
   initValue: T,
-  value: T,
+  value?: T,
   externalUpdater?: (prevVal: T, nextState: T) => T | undefined,
 ) => {
   const [internalState, setInternalState] = useState<T>(initValue);

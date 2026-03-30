@@ -1,42 +1,4 @@
-// import { useCallback, useState, SetStateAction } from "react";
-
-import { useCallback, useState } from "react";
-
-// /**
-//  * A custom hook that manages state with an optional external interceptor.
-//  *
-//  * @param initState - The initial state value.
-//  * @param externalUpdater - An optional middleware function to intercept state updates.
-//  *                          It receives the previous and next states and returns the final state to be applied.
-//  * @returns A tuple containing the current state and the dispatcher function, identical to the standard useState.
-//  */
-
-// const useStateReducer = <T>(
-//   initState: T,
-//   externalUpdater?: (prevState: T, nextState: T) => T,
-// ) => {
-//   const [state, setState] = useState(initState);
-//   const finalUpdater = useCallback(
-//     (internalNewState: SetStateAction<T>) => {
-//       if (externalUpdater)
-//         setState((prevState) =>
-//           externalUpdater(
-//             prevState,
-//             typeof internalNewState === "function"
-//               ? (internalNewState as (prevState: T) => T)(prevState)
-//               : internalNewState,
-//           ),
-//         );
-//       else {
-//         setState(internalNewState);
-//       }
-//     },
-//     [externalUpdater],
-//   );
-//   return [state, finalUpdater] as const;
-// };
-
-// export { useStateReducer };
+import { SetStateAction, useCallback, useRef, useState } from "react";
 
 const useStateReducer = <T>(
   initValue: T,
@@ -45,10 +7,22 @@ const useStateReducer = <T>(
 ) => {
   const [internalState, setInternalState] = useState<T>(initValue);
   const isControlled = typeof value !== "undefined";
+  const state = !isControlled ? internalState : value;
+
+  // setState Opimization
+  const stateRef = useRef(state);
+  stateRef.current = state;
+
   const setState = useCallback(
-    (newState: T) => {
+    (action: SetStateAction<T>) => {
+      const prevState = stateRef.current;
+      const nextState =
+        typeof action === "function"
+          ? (action as (prev: T) => T)(prevState)
+          : action;
+
       if (externalUpdater) {
-        const reducedState = externalUpdater(internalState, newState);
+        const reducedState = externalUpdater(internalState, nextState);
 
         // update internal state when uncontrolled
         if (!isControlled && reducedState !== undefined) {
@@ -56,13 +30,13 @@ const useStateReducer = <T>(
         }
       } else {
         if (!isControlled) {
-          setInternalState(newState);
+          setInternalState(nextState);
         }
       }
     },
     [externalUpdater],
   );
-  const state = !isControlled ? internalState : value;
+
   return [state, setState] as const;
 };
 export { useStateReducer };

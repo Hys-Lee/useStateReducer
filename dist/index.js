@@ -27,19 +27,26 @@ var import_react = require("react");
 var useStateReducer = (initValue, value, externalUpdater) => {
   const [internalState, setInternalState] = (0, import_react.useState)(initValue);
   const isControlled = typeof value !== "undefined";
-  const setState = (newState) => {
-    if (externalUpdater) {
-      const reducedState = externalUpdater(internalState, newState);
-      if (!isControlled && reducedState !== void 0) {
-        setInternalState(reducedState);
-      }
-    } else {
-      if (!isControlled) {
-        setInternalState(newState);
-      }
-    }
-  };
   const state = !isControlled ? internalState : value;
+  const stateRef = (0, import_react.useRef)(state);
+  stateRef.current = state;
+  const setState = (0, import_react.useCallback)(
+    (action) => {
+      const prevState = stateRef.current;
+      const nextState = typeof action === "function" ? action(prevState) : action;
+      if (externalUpdater) {
+        const reducedState = externalUpdater(internalState, nextState);
+        if (!isControlled && reducedState !== void 0) {
+          setInternalState(reducedState);
+        }
+      } else {
+        if (!isControlled) {
+          setInternalState(nextState);
+        }
+      }
+    },
+    [externalUpdater]
+  );
   return [state, setState];
 };
 // Annotate the CommonJS export names for ESM import in node:
